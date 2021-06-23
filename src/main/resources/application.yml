@@ -1,0 +1,33 @@
+server:
+  servlet:
+    context-path: /splitexp
+  port: 8080
+
+spring:
+  datasource:
+    hikari:
+      minimumIdle:10
+      maximumPoolSize:20
+      idleTimeout:30000
+      poolName:FriendBookCP
+      maxLifetime:2000000
+      connectionTimeout:30000
+    platform: postgres
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/splitexp
+    username: postgres
+    password: 
+  jpa:
+    database: POSTGRESQL
+    properties.hibernate.temp.use_jdbc_metadata_defaults: false
+    hibernate:
+      ddl-auto: validate
+
+spring.jackson.date-format: yyyy-MM-dd
+spring.jackson.default-property-inclusion: non_null
+
+springfox:
+  documentation:
+    swagger:
+      v2:
+        path: /
