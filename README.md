@@ -1,35 +1,17 @@
-# Tax Service
+Prerequistes:
 
-## Local Setup
+1. Maven
+2. PostgreSQL database running on port 5432
 
-##### Pre-requisites
+Steps to start the application:
 
-* Maven 3
-* Java
+1. mvn clean package
+2. mvn spring-boot:running
 
-##### Steps to get started
 
-1. Create `Personal Access Tokens` on Gitlab
-2. Create `settings.xml` file in $HOME/.m2 folder using following snippet.
-     ```xml
-     <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
-        <servers>
-           <server>
-               <id>gitlab-maven</id>
-               <configuration>
-                   <httpHeaders>
-                       <property>
-                           <name>private-token</name>
-                           <value>{token}</value>
-                       </property>
-                   </httpHeaders>
-               </configuration>
-           </server>
-        </servers>
-     </settings>
-     ```
-3. Add Code Style `.editorconfig` from the repository to your IDE settings.
-4. Get the libraries needed using command ```mvn install```
-5. Start the application using command ```mvn spring-boot:run```
+How it works:
+
+1. The application uses Flyway to install the required tables and plugins, so running the SQL manually is not required.
+2. The Flyway script creates 7 sample users and 2 groups.
+3. The application runs on port 8080
+4. After the application is started, an interactive API documentation and playground is available at http://localhost:8080/splitexp/swagger-ui.html
