@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.project.splitexp.exceptions.GroupNotFoundException;
 import com.project.splitexp.repository.GroupRepository;
 import com.project.splitexp.repository.UserGroupMappingRepository;
 import com.project.splitexp.repository.UserRepository;
@@ -50,11 +51,11 @@ public class UserEntityService {
     return groups;
   }
 
-  public GroupInformation getGroupInformation(String groupId) {
+  public GroupInformation getGroupInformation(String groupId) throws GroupNotFoundException {
 
     Group group = groupRepository.findById(UUID.fromString(groupId)).orElse(null);
     if (group == null) {
-      // throw exception
+      throw new GroupNotFoundException("Group not found with id " + groupId);
     }
 
     GroupInformation groupInformation = new GroupInformation();

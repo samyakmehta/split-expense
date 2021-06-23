@@ -12,6 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.splitexp.exceptions.EventNotFoundException;
+import com.project.splitexp.exceptions.ExpenseNotFoundException;
+import com.project.splitexp.exceptions.InvalidExpenseCreationRequest;
 import com.project.splitexp.repository.ExpenseDistributionRepository;
 import com.project.splitexp.repository.ExpenseRepository;
 import com.project.splitexp.repository.PendingTransactionsRepository;
@@ -47,12 +50,14 @@ public class ExpenseService {
     this.pendingTransactionsRepository = pendingTransactionsRepository;
   }
 
-  public ExpenseInformation getExpenseInformation(String expenseId) {
+  public ExpenseInformation getExpenseInformation(String expenseId) throws ExpenseNotFoundException {
+
+    // aggregate expense and expense distribution information
 
     Expense expense = expenseRepository.findById(UUID.fromString(expenseId)).orElse(null);
 
     if (expense == null) {
-      // throw exception
+      throw new ExpenseNotFoundException("Expense not found with id " + expenseId);
     }
 
     List<ExpenseDistribution> expenseDistributions = expenseDistributionRepository.findByExpenseId(expense.getId());
@@ -63,7 +68,15 @@ public class ExpenseService {
   }
 
   @Transactional(rollbackOn = Exception.class)
-  public ExpenseInformation createExpense(ExpenseCreationRequest expenseCreationRequest) {
+  public ExpenseInformation createExpense(ExpenseCreationRequest expenseCreationRequest)
+      throws InvalidExpenseCreationRequest, EventNotFoundException {
+
+    /*
+     * The method is marked transactional to avoid partial writes. This method
+     * creates a new expense, creates expense distributions and also updates pending
+     * transactions for every user. For consistency, if anything fails, the
+     * transaction rolls back
+     */
 
     validateExpenseCreationRequest(expenseCreationRequest);
 
@@ -86,6 +99,7 @@ public class ExpenseService {
           .contributionType(expenseDistributionRequest.getContributionType()).expenseId(expense.getId())
           .userContribution(userAmount).userId(UUID.fromString(expenseDistributionRequest.getUserId())).build();
 
+      // update pending transactions
       if (!expenseDistributionRequest.getUserId().equals(expenseCreationRequest.getUserId())) {
         PendingTransaction pendingTransaction = pendingTransactionsRepository.findByPayerIdAndReceiverId(
             UUID.fromString(expenseDistributionRequest.getUserId()),
@@ -110,7 +124,8 @@ public class ExpenseService {
         expenseDistributions);
   }
 
-  private void validateExpenseCreationRequest(ExpenseCreationRequest expenseCreationRequest) {
+  private void validateExpenseCreationRequest(ExpenseCreationRequest expenseCreationRequest)
+      throws InvalidExpenseCreationRequest, EventNotFoundException {
 
     double expenseAmount = expenseCreationRequest.getAmount();
     String userId = expenseCreationRequest.getUserId();
@@ -121,12 +136,12 @@ public class ExpenseService {
         .getExpenseDistributionRequests();
 
     if (StringUtils.isEmpty(name)) {
-      // throw exception
+      throw new InvalidExpenseCreationRequest("Expense cannot be created without name");
     }
 
     User user = userEntityService.getUser(userId);
     if (user == null) {
-      // throw Exception
+      throw new InvalidExpenseCreationRequest("User does not exist with id " + userId);
     }
 
     EventInformation eventInformation = eventService.getEventInformation(eventId);
@@ -135,13 +150,15 @@ public class ExpenseService {
     double totalExpense = 0;
     for (ExpenseDistributionRequest expenseDistributionRequest : expenseDistributionRequests) {
 
-      if (!eventUserIds.contains(expenseDistributionRequest.getUserId())) {
-        // throw new exception
+      if (!eventUserIds.contains(UUID.fromString(expenseDistributionRequest.getUserId()))) {
+        throw new InvalidExpenseCreationRequest(
+            "User id " + expenseDistributionRequest.getUserId() + " does not belong to the event " + eventId);
       }
 
       if (expenseDistributionRequest.getContributionType() != FIXED_AMOUNT_CONTRIBUTION
           && expenseDistributionRequest.getContributionType() != PERCENTAGE_CONTRIBUTION) {
-        // throw exception
+        throw new InvalidExpenseCreationRequest(
+            "Invalid value for contribution type. Allowed values are 1(fixed) and 2(percentage)");
       }
       double userAmount = (expenseDistributionRequest.getContributionType() == FIXED_AMOUNT_CONTRIBUTION)
           ? expenseDistributionRequest.getContributionAmount()
@@ -152,7 +169,7 @@ public class ExpenseService {
     }
 
     if (Math.ceil(totalExpense) != expenseAmount) {
-      // throw exception
+      throw new InvalidExpenseCreationRequest("The sum of the distributed amount does not equal the expense amount");
     }
 
   }

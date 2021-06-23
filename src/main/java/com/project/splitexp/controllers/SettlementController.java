@@ -10,6 +10,9 @@ import com.project.splitexp.request.models.SettlementRequest;
 import com.project.splitexp.response.models.PendingTransactionsResponse;
 import com.project.splitexp.services.PendingTransactionsService;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModel;
+
 @RestController
 public class SettlementController {
 

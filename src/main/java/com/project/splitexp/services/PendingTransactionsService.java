@@ -37,6 +37,9 @@ public class PendingTransactionsService {
 
     Set<PendingTransactionResponse> pendingTransactionsResponse = new HashSet<PendingTransactionResponse>();
 
+    // optimize Pending transactions between same users. Only the effective
+    // transaction between two users should be added in the response
+
     for (PendingTransaction pendingTransactionAsPayer : pendingTransactionsAsPayer) {
 
       UUID receiverUser = pendingTransactionAsPayer.getReceiverId();

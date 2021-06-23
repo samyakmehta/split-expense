@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.splitexp.exceptions.EventNotFoundException;
+import com.project.splitexp.exceptions.InvalidEventCreationRequest;
 import com.project.splitexp.request.models.EventCreationRequest;
 import com.project.splitexp.response.models.EventInformation;
 import com.project.splitexp.services.EventService;
@@ -22,13 +24,14 @@ public class EventController {
   }
 
   @PostMapping("/v1/event")
-  public EventInformation createEvent(@RequestBody EventCreationRequest eventCreationRequest) {
+  public EventInformation createEvent(@RequestBody EventCreationRequest eventCreationRequest)
+      throws InvalidEventCreationRequest {
 
     return eventService.createEvent(eventCreationRequest);
   }
 
   @GetMapping("/v1/event/{eventId}")
-  public EventInformation createEvent(@PathVariable String eventId) {
+  public EventInformation createEvent(@PathVariable String eventId) throws EventNotFoundException {
 
     return eventService.getEventInformation(eventId);
   }

@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.splitexp.exceptions.EventNotFoundException;
+import com.project.splitexp.exceptions.InvalidEventCreationRequest;
 import com.project.splitexp.repository.EventRepository;
 import com.project.splitexp.repository.EventUserMappingRepository;
 import com.project.splitexp.repository.models.Event;
@@ -37,11 +39,13 @@ public class EventService {
     return eventRepository.findById(UUID.fromString(eventId)).orElse(null);
   }
 
-  public EventInformation getEventInformation(String eventId) {
+  public EventInformation getEventInformation(String eventId) throws EventNotFoundException {
+
+    // aggregate event and event user mapping information
 
     Event event = getEvent(eventId);
     if (event == null) {
-      // throw exception
+      throw new EventNotFoundException("Event not found with id " + eventId);
     }
 
     Set<UUID> userIds = new HashSet<UUID>();
@@ -54,9 +58,12 @@ public class EventService {
     return new EventInformation(event.getId(), event.getName(), userIds, event.getCreatedAt());
   }
 
-  public EventInformation createEvent(EventCreationRequest eventCreationRequest) {
+  public EventInformation createEvent(EventCreationRequest eventCreationRequest) throws InvalidEventCreationRequest {
 
     validateEventCrationRequest(eventCreationRequest);
+
+    // create a new event and create event user mappings
+
     OffsetDateTime createdAt = OffsetDateTime.now();
     Event event = Event.builder().name(eventCreationRequest.getName()).createdAt(createdAt).build();
     event = eventRepository.save(event);
@@ -72,20 +79,23 @@ public class EventService {
 
   }
 
-  private void validateEventCrationRequest(EventCreationRequest eventCreationRequest) {
+  private void validateEventCrationRequest(EventCreationRequest eventCreationRequest)
+      throws InvalidEventCreationRequest {
+
+    // validate the event creation
 
     if (StringUtils.isEmpty(eventCreationRequest.getName())) {
-      // throw exception
+      throw new InvalidEventCreationRequest("Event name cannot be empty");
     }
 
     if (eventCreationRequest.getUserIds() == null || eventCreationRequest.getUserIds().isEmpty()) {
-      // throw exception
+      throw new InvalidEventCreationRequest("Event cannot be created without users");
     }
 
     for (String userId : eventCreationRequest.getUserIds()) {
       User user = userEntityService.getUser(userId);
       if (user == null) {
-        // throw exception
+        throw new InvalidEventCreationRequest("User does not exist with id " + userId);
       }
     }
   }

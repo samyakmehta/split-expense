@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.splitexp.exceptions.GroupNotFoundException;
+import com.project.splitexp.exceptions.UserNotFoundException;
 import com.project.splitexp.repository.models.Group;
 import com.project.splitexp.repository.models.User;
 import com.project.splitexp.response.models.GroupInformation;
@@ -31,8 +33,13 @@ public class UserEntityController {
   }
 
   @GetMapping("/v1/user/{userId}")
-  public User getUser(@PathVariable String userId) {
-    return userEntityService.getUser(userId);
+  public User getUser(@PathVariable String userId) throws UserNotFoundException {
+    User user = userEntityService.getUser(userId);
+    if (user == null) {
+      throw new UserNotFoundException("User not found with id " + userId);
+    }
+
+    return user;
   }
 
   @GetMapping("/v1/groups")
@@ -42,7 +49,7 @@ public class UserEntityController {
   }
 
   @GetMapping("/v1/group/{groupId}")
-  public GroupInformation getGroupInformation(@PathVariable String groupId) {
+  public GroupInformation getGroupInformation(@PathVariable String groupId) throws GroupNotFoundException {
     return userEntityService.getGroupInformation(groupId);
   }
 }
