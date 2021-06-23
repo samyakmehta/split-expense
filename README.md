@@ -6,7 +6,7 @@ Prerequistes:
 Steps to start the application:
 
 1. mvn clean package
-2. mvn spring-boot:running
+2. mvn spring-boot:run
 
 
 How it works:
