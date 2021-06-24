@@ -1,6 +1,5 @@
 package com.project.splitexp.exceptions;
 
-import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExceptionResponseHandler extends ResponseEntityExceptionHandler {
 
-  private final Logger logger;
-
-  public ExceptionResponseHandler(Logger log) {
-    this.logger = log;
+  public ExceptionResponseHandler() {
   }
 
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
